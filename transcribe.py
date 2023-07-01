@@ -13,7 +13,7 @@ from tqdm.auto import tqdm
 import whisper
 
 
-def main(in_video: str, out_file: str, ass: bool = False):
+def main(in_video: str, out_file: str, model_size: str = 'large', ass: bool = False):
     """Detect and extract the TR clips from the onboard video, and then transcribe them and make
     a subtitle
 
@@ -37,7 +37,7 @@ def main(in_video: str, out_file: str, ass: bool = False):
 
     # Transcribe each TR
     raw_audio = AudioSegment.from_wav('temp/audio.wav')
-    model = whisper.load_model('large')
+    model = whisper.load_model(model_size)
     transcript = []
     for clip, _ in tqdm(tr_clips.itertracks(yield_label=False), desc='Transcribing'):
 
@@ -128,6 +128,14 @@ if __name__ == '__main__':
     parser.add_argument('--in_video', '-i', type=str, help='Path to the onboard video')
     parser.add_argument('--out_file', '-o', type=str, default='transcript.json',
                         help='Path to the output transcription file')
+    parser.add_argument('--model_size', '-m', type=str, help='Model size (see '
+                        'https://github.com/openai/whisper#available-models-and-languages). '
+                        'Default = large', default='large')
     parser.add_argument('--ass', action='store_true', help='Create .ass subtitle')
     args = parser.parse_args()
-    main(args.in_video, args.out_file, args.ass)
+
+    if args.model_size not in ['tiny', 'base', 'small', 'medium', 'large']:
+        print('Model size must be one of the {"tiny", "base", "small", "medium", "large"}!')
+        exit(1)
+
+    main(args.in_video, args.out_file, args.model_size, args.ass)
